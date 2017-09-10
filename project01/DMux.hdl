@@ -1,0 +1,8 @@
+CHIP DMux {
+	IN in, sel;
+	OUT a, b;
+	PARTS:
+	Not(in=sel, out=notsel);
+	Mux(a=false, b=in, sel=notsel, out=a);
+	Mux(a=false, b=in, sel=sel, out=b);
+}
