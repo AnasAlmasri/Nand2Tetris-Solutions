@@ -1,0 +1,47 @@
+// This chip takes in two 16-bit inputs
+// it performs certain arithmetic operations depending on the six control bits
+// and outputs the results of the operations
+
+CHIP ALU { // start of chip file
+
+	// include header description
+	IN x[16], y[16], zx, nx, zy, ny, f, no; // declare inputs
+	OUT out[16], zr, ng; // declare outputs
+	// end of header descriptopn
+
+	// include implementation description
+	PARTS:
+	// in each part, we fullfill the two possibilities of the selectors
+	// Mux statements are used to test the conditions (selectors) and determine the outputs
+
+	// determine output of x depending on zx
+	Mux16(a[0..15]=x, b[0..15]=false, sel=zx, out[0..15]=Xout1);
+
+	// determine output of y depending on zy
+	Mux16(a[0..15]=y, b[0..15]=false, sel=zy, out[0..15]=Yout1);
+
+	// determine new output of x depending on nx
+	Not16(in[0..15]=Xout1, out[0..15]=notX); // find notX
+	Mux16(a[0..15]=Xout1, b[0..15]=notX, sel=nx, out[0..15]=Xout2);
+
+	// determine new output of y depending on ny
+	Not16(in[0..15]=Yout1, out[0..15]=notY); // find notY
+	Mux16(a[0..15]=Yout1, b[0..15]=notY, sel=ny, out[0..15]=Yout2);
+
+	// find x+y and x&y and determine new output depending on f
+	Add16(a[0..15]=Xout2, b[0..15]=Yout2, out[0..15]=sumXY); // find x+y
+	And16(a[0..15]=Xout2, b[0..15]=Yout2, out[0..15]=XandY); // find x&y
+	Mux16(a[0..15]=XandY, b[0..15]=sumXY, sel=f, out[0..15]=Fout);
+
+	// output the final result and divide it into 2 halves to use them in the next statements
+	Not16(in[0..15]=Fout, out[0..15]=notFout); // find notF
+	Mux16(a[0..15]=Fout, b[0..15]=notFout, sel=no, out[0..7]=out1, out[8..15]=out2, out[15]=ng, out[0..15]=out); // value of ng is determined here as well
+
+	// determine value of zr using output's two halves
+	Or8Way(in[0..7]=out1, out=half1); // check for ones in the first half
+	Or8Way(in[0..7]=out2, out=half2); // check for ones in the second half
+	Or(a=half1, b=half2, out=notZR); // Or the results of the two halves and find zr-not
+	Not(in=notZR, out=zr); // find the value of zr
+	// end of implementation description
+
+} // end of chip file
