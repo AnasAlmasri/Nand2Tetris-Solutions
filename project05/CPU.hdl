@@ -1,0 +1,77 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+
+ // instructions list:
+    // A-instruction: 0vvv vvvv vvvv vvvv
+    // C-instruction: 111a cccc ccdd djjj
+    // a=instruction[12]
+    // c=instruction[6..11]
+    // d1=instruction[5]
+    // d2=instruction[4]
+    // d3=instruction[3]
+    // j1=instruction[2]
+    // j2=instruction[1]
+    // j3=instruction[0]
+
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+    
+    OUT outM[16],        // M value output
+        writeM,          // Write to M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+
+// 1. Instruction decode – Recall A-instruction begins with 0 while Cinstructions begin with a 1.
+// 2. Implement the A-register Built-in Chip – You need to select between the ALU output and the input instruction.
+// 3. Implement the D register – Declare the D-register built-in chip
+// 4. Implement the ALU – Use the ALU Built-in Chip.
+// 5. Implement the PC – with all the possible jump tests. 
+   
+
+    PARTS:
+        Not(in=instruction[15], out=notA);
+        Mux16(a=ALUout, b=instruction, sel=notA, out=Mux1out);
+
+        Or(a=notA, b=instruction[5], out=ARload);
+        ARegister(in=Mux1out, load=ARload, out=ARout, out[0..14]=addressM);
+
+        And(a=instruction[15], b=instruction[12], out=Muxload);
+        Mux16(a=ARout, b=inM, sel=Muxload, out=Mux2out);
+
+        And(a=instruction[15], b=instruction[4], out=DRload);
+        DRegister(in=ALUout, load=DRload, out=DRout);
+
+        And(a=instruction[15], b=instruction[3], out=writeM);
+
+        ALU(x=DRout, y=Mux2out,
+            zx=instruction[11], nx=instruction[10],
+            zy=instruction[9], ny=instruction[8],
+            f=instruction[7], no=instruction[6],
+            zr=zr, ng=ng, out=outM, out=ALUout);
+
+        Not(in=ng, out=notNG);
+        Not(in=zr, out=notZR);
+
+        And(a=instruction[15], b=instruction[0], out=JGT);
+        And(a=notNG, b=notZR, out=notNGZR);
+        And(a=JGT, b=notNGZR, out=PCload1);
+
+        And(a=instruction[15], b=instruction[1], out=JEQ);
+        And(a=JEQ, b=zr, out=PCload2);
+
+        And(a=instruction[15], b=instruction[2], out=JLT);
+        And(a=JLT, b=ng, out=PCload3);
+
+        Or(a=PCload1, b=PCload2, out=PCtempload);
+        Or(a=PCtempload, b=PCload3, out=PCload);
+        PC(in=ARout, load=PCload, inc=true, reset=reset, out[0..14]=pc);
+
+}
+
+   
