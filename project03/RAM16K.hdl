@@ -1,0 +1,31 @@
+// This chip takes in three inputs: 16-bit data, address and a load bit
+// Input value is directed towards the RAM4K specified by address bits
+// then it's directed towards the RAM512 specified by address bits within the RAM4K
+// then it's directed towards the RAM64 specified by address bits within the RAM512
+// then it's directed towards the RAM8 specified by address bits within the RAM64
+// then it's loaded into the specified 16-bit register within the RAM8
+// Output holds the value stored at the memory location specified by the address bits
+
+CHIP RAM16K { // start of chip file
+
+	// include header description
+	IN in[16], load, address[14]; // declare inputs
+	OUT out[16]; // declare output
+	// end of header description
+	
+	// include implementation description
+	PARTS:
+		// use DMux4Way to set 4 load bits (addresses) from one load bit and two addresses (selectors)
+		DMux4Way(in=load, sel=address[12..13], a=loadR1, b=loadR2, c=loadR3, d=loadR4);
+
+		// choose a 16-bit RAM4K depending on the load bits (addresses)
+		RAM4K(in=in, load=loadR1, address=address[0..11], out=outRAM1);
+		RAM4K(in=in, load=loadR2, address=address[0..11], out=outRAM2);
+		RAM4K(in=in, load=loadR3, address=address[0..11], out=outRAM3);
+		RAM4K(in=in, load=loadR4, address=address[0..11], out=outRAM4);
+
+		// use Mux4Way16 to output the value from the selected RAM4K to the output pin of the RAM16K
+		Mux4Way16(a=outRAM1, b=outRAM2, c=outRAM3, d=outRAM4, sel=address[12..13], out=out);
+	// end if implementation description
+
+} // end of chip file

@@ -1,0 +1,32 @@
+// This chip takes in three inputs: 16-bit data, address and a load bit
+// Input value is directed towards the RAM8 specified by address bits
+// then it's loaded into the 16-bit register specified by address bits within the RAM8
+// Output holds the value stored at the memory location specified by address bits
+
+CHIP RAM64 { // start of chip file
+
+    // include header description
+    IN in[16], load, address[6]; // declare inputs
+    OUT out[16]; // declare output
+    // end of header decription
+ 
+    // include implementation decription
+     PARTS:
+        // use DMux8Way to set 8 load bits (addresses) from one load bit and the last three addresses (selectors)
+         DMux8Way(in=load, sel=address[3..5], a=LOADa, b=LOADb, c=LOADc, d=LOADd, e=LOADe, f=LOADf, g=LOADg, h=LOADh);
+
+         // choose a 16-bit RAM8 depending on the first three load bits (addresses)
+         RAM8(in=in, address=address[0..2], out=RAMa, load=LOADa);
+         RAM8(in=in, address=address[0..2], out=RAMb, load=LOADb);
+         RAM8(in=in, address=address[0..2], out=RAMc, load=LOADc);
+         RAM8(in=in, address=address[0..2], out=RAMd, load=LOADd);
+         RAM8(in=in, address=address[0..2], out=RAMe, load=LOADe);
+         RAM8(in=in, address=address[0..2], out=RAMf, load=LOADf);
+         RAM8(in=in, address=address[0..2], out=RAMg, load=LOADg);
+         RAM8(in=in, address=address[0..2], out=RAMh, load=LOADh);
+
+         // use Mux8Way16 to output the value from the selected RAM8 to the output pin of the RAM64
+         Mux8Way16(a=RAMa, b=RAMb, c=RAMc, d=RAMd, e=RAMe, f=RAMf, g=RAMg, h=RAMh, sel=address[3..5], out=out);
+    // end of implementation description
+
+} // end of chip file

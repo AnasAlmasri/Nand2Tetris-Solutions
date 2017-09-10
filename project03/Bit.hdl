@@ -1,0 +1,23 @@
+// This chip takes in one 1-bit input
+// it "remembers" the input from the last time unit
+// and outputs it in the next time unit depending on the load instructions
+// The essential function of this chip is:
+// out[t] = in[t-1]
+
+CHIP Bit { // start of chip file
+	
+	// include header description
+	IN in, load; // declare inputs
+	OUT out; // declare output
+	// end of header description
+
+	// include implementation description
+	PARTS:
+		// use a DFF to save the bit value
+		DFF(in=x, out=muxIN, out=out);
+
+		// use a Mux gate to return the DFF output to its input depending on sel (load) instructions
+		Mux(a=muxIN, b=in, sel=load, out=x);
+	// end of implementation description
+
+} // end of chip file

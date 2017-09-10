@@ -1,0 +1,35 @@
+// This chip takes in four inputs: 16-bit data, and three control bits (load, inc, and reset)
+// it computes the counting function and puts the counter in the right operating mode
+// Output is dependant on the three control bits
+// The essential function of this chip is:
+// if reset(t-1) then out(t)=0
+//		else if load(t-1) then out(t)=in(t-1)
+// 			else if inc(t-1) then out(t)=out(t-1)+1
+//				else out(t)=out(t-1)
+
+CHIP PC { // start of chip file
+
+	// include header description
+	IN in[16], load, inc, reset; // declare inputs
+	OUT out[16]; // declare output
+	// end of header description
+
+	// include implementation description
+	PARTS:
+		// use Inc16 to increment the input
+		Inc16(in=INCin, out=INCout);
+
+		// use Mux16 to determine output depending on "inc" control bit
+	    Mux16(a=INCin, b=INCout, sel=inc, out=Muxout1);
+
+	    // use Mux16 to determine output depending on "load" control bit
+	    Mux16(a=Muxout1, b=in, sel=load, out=Muxout2);
+
+	    // use Mux16 to determine output depending on "reset" control bit
+	    Mux16(a=Muxout2, b=false, sel=reset, out=Muxout3);
+
+	    // use 16-bit Register to determine final output and feed it into the Inc16 gate
+	    Register(in=Muxout3, load=true, out=out, out=INCin);
+	// end of implementation description
+	
+} // end of chip file

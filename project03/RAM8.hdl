@@ -1,0 +1,34 @@
+// This chip takes in three inputs: 16-bit data, address and a load bit
+// Input value is loaded into the 16-bit register specified by address bits
+// Output holds the value stored at the memory location specified by address bits
+// The essential function of this chip is:
+// out(t)=RAM[address(t)](t)
+// 		if load(t-1) then RAM[address(t-1)](t)=in(t-1)
+
+CHIP RAM8 { // start of chip file
+
+	// include header description
+	IN in[16], load, address[3]; // declare inputs
+	OUT out[16]; // declare output
+	// end of header description
+
+	// include implementation description
+	PARTS:
+		// use DMux8Way to set 8 load bits (addresses) from one load bit and three addresses (selectors)
+		DMux8Way(in=load, sel=address, a=loadR1, b=loadR2, c=loadR3, d=loadR4, e=loadR5, f=loadR6, g=loadR7, h=loadR8);
+
+		// choose a 16-bit register (RAM) depending on the load bits (address)
+		Register(in=in, load=loadR1, out=outR1);
+		Register(in=in, load=loadR2, out=outR2);
+		Register(in=in, load=loadR3, out=outR3);
+		Register(in=in, load=loadR4, out=outR4);
+		Register(in=in, load=loadR5, out=outR5);
+		Register(in=in, load=loadR6, out=outR6);
+		Register(in=in, load=loadR7, out=outR7);
+		Register(in=in, load=loadR8, out=outR8);
+
+		// use Mux8Way16 to output the value from the selected register to the output pin of the RAM8
+		Mux8Way16(a=outR1, b=outR2, c=outR3, d=outR4, e=outR5, f=outR6, g=outR7, h=outR8, sel=address, out=out);
+	// end of implememntation description
+
+} // end of chip file
